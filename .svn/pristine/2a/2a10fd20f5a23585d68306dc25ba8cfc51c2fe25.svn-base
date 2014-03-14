@@ -1,0 +1,106 @@
+package com.sun.tools.javac.tree;
+
+import com.sun.tools.javac.parser.JavacParser;
+import com.sun.tools.javac.parser.ParserFactory;
+import com.sun.tools.javac.tree.JCTree.JCBlock;
+import com.sun.tools.javac.tree.JCTree.JCBlockExp;
+import com.sun.tools.javac.tree.JCTree.JCListAccess;
+import com.sun.tools.javac.tree.JCTree.JCListComp;
+import com.sun.tools.javac.util.Context;
+
+public class MyBlocks {
+	
+	private final  ParserFactory parserFactory;
+	private final  TreeMaker treeMaker;
+	public MyBlocks(Context context)
+	{
+		parserFactory=ParserFactory.instance(context);
+		treeMaker=TreeMaker.instance(context);
+	}
+	/**
+     *get block code of __list_access from name of them. 
+     */
+    private String getListAccessCode(JCListAccess tree)
+    {
+    	String list = tree.indexed.toString();
+    	String beg = tree.term1.toString();
+    	String end = tree.term2.toString();
+    	String step = tree.term3.toString();
+    	String code_list_access
+    	= "{"
+    		+"		List list = " + list + ";"
+    		+"		int beg = " + beg + ";"
+    		+"      int end = " + end + ";"
+    		+"      int step = " + step + ";"
+    		+ "		int len = list.size();                                           	"
+    		+ "		java.util.List tmpList = new java.util.ArrayList();              	"
+    		+ "                                                                         "
+    		+ "		if (step == Integer.MAX_VALUE)                                   	"
+    		+ "			step = 1;                                                    	"
+    		+ "		if (step > 0) {                                                  	"
+    		+ "			beg += (beg < 0) ? len : 0;                                  	"
+    		+ "			end += (end < 0) ? len : 0;                                     "
+    		+ "                                                                      	"
+    		+ "			if (beg == Integer.MAX_VALUE)                                	"
+    		+ "				beg = 0;                                                 	"
+    		+ "			if (end == Integer.MAX_VALUE)                                	"
+    		+ "				end = len;                                               	"
+    		+ "			for (int i = beg; i < end; i += step) {                      	"
+    		+ "				tmpList.add(list.get(i));                                	"
+    		+ "			}                                                            	"
+    		+ "		} else {                                                         	"
+    		+ "			beg += (beg < 0) ? len : 0;                                  	"
+    		+ "			end += (end < 0) ? len : 0;                                  	"
+    		+ "                                                                      	"
+    		+ "			if (beg == Integer.MAX_VALUE)                                	"
+    		+ "				beg = len - 1;                                           	"
+    		+ "			if (end == Integer.MAX_VALUE)                                	"
+    		+ "				end = -1;                                                	"
+    		+ "                                                                         "
+    		+ "			for (int i = beg; i > end; i += step) {                         "
+    		+ "				tmpList.add(list.get(i));                                   "
+    		+ "			}                                                               "
+    		+ "		}                                                                   "
+    		+ "		tmpList=tmpList;                                                     "
+    		+ "	} end ";
+    	return code_list_access;
+    }
+
+
+    private JCBlockExp parseBlockExp(String code)
+    {
+    	JavacParser parser=(JavacParser) parserFactory.newParser(code.subSequence(0, code.length()-1), false, false, false);
+    	JCBlock block=parser.block();
+    	JCBlockExp blockExp=treeMaker.BlockExp(block);
+    	return blockExp;
+    }
+    public JCBlockExp getListAccessBlock(JCListAccess tree)
+    {
+    	String code=getListAccessCode(tree);
+    	JCBlockExp blockExp=parseBlockExp(code);
+    	return blockExp;
+    }
+    
+    private String getListCompCode(JCListComp tree)
+    {
+    	String decl=tree.decl.toString();
+    	String expr=tree.expr.toString();
+    	String listExpr=tree.listExpr.toString();
+    	String ifExpr=tree.ifExpr.toString();
+    	String code="{"
+    		+"java.util.List tmpList = new ArrayList();"
+    		+"for("+decl+":"+listExpr+")"
+    		+"	if("+ifExpr+")"
+    		+"		tmpList.add("+expr+");"	
+    		+"tmpList=tmpList;"
+    		+"} end";
+    	return code;
+    }
+    public JCBlockExp getListCompBlock(JCListComp tree)
+    {
+    	String code=getListCompCode(tree);
+    	JCBlockExp blockExp=parseBlockExp(code);
+    	return blockExp;
+    }
+
+}

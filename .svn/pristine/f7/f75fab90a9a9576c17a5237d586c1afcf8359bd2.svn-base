@@ -1,0 +1,74 @@
+package com.sun.tools.javac.tree;
+
+import com.sun.tools.javac.code.Type.ForAll;
+import com.sun.tools.javac.tree.JCTree.JCArrayAccess;
+import com.sun.tools.javac.tree.JCTree.JCExpression;
+import com.sun.tools.javac.tree.JCTree.JCExpressionStatement;
+import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
+import com.sun.tools.javac.tree.JCTree.JCIdent;
+import com.sun.tools.javac.tree.JCTree.JCListAccess;
+import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
+import com.sun.tools.javac.tree.JCTree.JCNewClass;
+import com.sun.tools.javac.tree.JCTree.JCNewList;
+import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
+import com.sun.tools.javac.util.List;
+
+public class ListTreeTranslator extends TreeTranslator {
+	private Names names = null;
+	private Context context = null;
+	private TreeMaker treeMaker = null;
+
+	public ListTreeTranslator(Context context) {
+		this.context = context;
+		names = Names.instance(context);
+		treeMaker = TreeMaker.instance(context);
+	}
+
+	@Override
+	public void visitIndexedL(JCListAccess tree) {
+		tree.indexed = translate(tree.indexed);
+		tree.index = translate(tree.index);
+
+		//list.get(2);
+		List<JCExpression> args=List.of(tree.index);
+		JCIdent selected = (JCIdent)tree.indexed;
+		Name get = names.fromString("get");
+		JCFieldAccess list_get = treeMaker.Select(selected, get);
+
+		JCMethodInvocation list_get_k = treeMaker.Apply(null,
+				list_get, args);
+		
+		//JCExpressionStatement
+		
+		result= list_get_k;	
+	}
+
+	@Override
+	public void visitNewList(JCNewList tree) {
+		tree.elemtype = translate(tree.elemtype);
+		tree.elems = translate(tree.elems);
+		// result = tree;
+
+		//methord: Arrays.asList()
+		JCIdent arrays = treeMaker.Ident(names.fromString("Arrays"));
+		Name asList = names.fromString("asList");
+		JCFieldAccess arrays_asList = treeMaker.Select(arrays, asList);
+		
+		JCMethodInvocation arrays_asListInvocation = treeMaker.Apply(null,
+				arrays_asList, tree.elems);
+
+		//NEW: new ArrayList()
+		List<JCExpression> args_new = List
+				.of((JCExpression) arrays_asListInvocation);
+
+		JCIdent class_new = treeMaker.Ident(names.fromString("ArrayList"));
+
+		JCNewClass newClass = treeMaker.NewClass(null, null, class_new,
+				args_new, null);
+
+		result = newClass;
+	}
+
+}

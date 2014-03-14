@@ -1,0 +1,6 @@
+package com.sun.source.tree;
+
+public interface ListAccessTree extends ExpressionTree {
+    ExpressionTree getExpression();
+    ExpressionTree getIndex();
+}

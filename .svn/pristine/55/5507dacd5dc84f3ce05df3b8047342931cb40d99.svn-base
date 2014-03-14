@@ -1,0 +1,19 @@
+package com.sun.tools.javac.tree;
+
+import com.sun.tools.javac.tree.JCTree.JCArrayAccess;
+import com.sun.tools.javac.tree.JCTree.JCListAccess;
+
+
+public class ListTreeTranslator extends TreeTranslator {
+
+	@Override
+	public void visitIndexedL(JCListAccess tree) {
+		tree.indexed = translate(tree.indexed);
+        tree.index = translate(tree.index);
+        JCArrayAccess arrayTree= new JCArrayAccess(tree.indexed, tree.index);
+        arrayTree.setPos(tree.pos);
+        arrayTree.setType(tree.type);
+        result = arrayTree;
+	}
+	
+}

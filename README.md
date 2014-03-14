@@ -1,0 +1,2 @@
+This project is to add Java language with Python-style list features, that is list define, list slice, list comprehension, list add and multiply. 
+Based on source code on Javac of OpenJDK7, after trials and errors, we come up with an original idea of adding Python-style list features to Java language. This idea is efficient, workable and stable.
